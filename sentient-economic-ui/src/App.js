@@ -1,31 +1,30 @@
-import { useState } from "react";
-import Header from "./components/Header";
-import ProfileManagement from "./components/ProfileManagement";
-import QuestManagement from "./components/QuestManagement";
-import ResourceManagement from "./components/ResourceManagement";
-import ProgressionTracking from "./components/ProgressionTracking";
-import NarrativeMemory from "./components/NarrativeMemory";
+import React, { useState } from 'react';
+import { createActorWithIdentity } from './index.js';
+import Header from './Header';
+import ProfileManagement from './ProfileManagement';
+import QuestManagement from './QuestManagement';
+import ResourceManagement from './ResourceManagement';
+import NarrativeMemory from './NarrativeMemory';
+import ProgressionTracking from './ProgressionTracking';
 
-const App = () => {
+function App() {
   const [identity, setIdentity] = useState(null);
   const [wallet, setWallet] = useState(null);
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="bg-gray-100 min-h-screen">
       <Header setIdentity={setIdentity} setWallet={setWallet} />
       <div className="container mx-auto p-4">
-        {identity && (
-          <>
-            <ProfileManagement identity={identity} />
-            <QuestManagement identity={identity} />
-            <ResourceManagement identity={identity} />
-            <ProgressionTracking identity={identity} />
-            <NarrativeMemory identity={identity} />
-          </>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ProfileManagement identity={identity} />
+          <QuestManagement identity={identity} />
+          <ResourceManagement identity={identity} />
+          <NarrativeMemory identity={identity} />
+          <ProgressionTracking identity={identity} />
+        </div>
       </div>
     </div>
   );
-};
+}
 
 export default App;
