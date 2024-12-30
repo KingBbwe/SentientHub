@@ -1,11 +1,17 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import App from "./App";
-import "./index.css";
+import { createActor } from './sentient_economic_interactions.did.js';
+import { canisterId } from './env.js';
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById("root")
-);
+export const actor = createActor(canisterId, {
+  agentOptions: {
+    host: process.env.NEXT_PUBLIC_IC_HOST,
+  },
+});
+
+export const createActorWithIdentity = (identity) => {
+  return createActor(canisterId, {
+    agentOptions: {
+      identity,
+      host: process.env.NEXT_PUBLIC_IC_HOST,
+    },
+  });
+};
