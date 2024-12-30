@@ -1,0 +1,65 @@
+name: Deploy Sentient Economic Canisters
+
+on:
+  push:
+    branches:
+      - UI-build
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install DFX
+        run: |
+          mkdir -p "$HOME/bin"
+          curl -L https://github.com/dfinity/dfx/releases/download/0.13.1/dfx-x86_64-unknown-linux-gnu.tar.gz | tar xz -C "$HOME/bin"
+          echo "$HOME/bin" >> $GITHUB_PATH
+          dfx --version || true
+
+      - name: Start Local Replica
+        run: |
+          dfx start --background && sleep 5
+          echo "Replica started successfully."
+
+      - name: Build and Deploy Backend Canisters
+        working-directory: SentientHub/sentient-economic-backend
+        run: |
+          dfx build || { echo "Backend build failed"; exit 1; }
+          dfx deploy || { echo "Backend deploy failed"; exit 1; }
+
+      - name: Get Backend Canister ID
+        working-directory: SentientHub/sentient-economic-backend
+        run: |
+          dfx canister id sentient_economic_backend > backend_canister_id.txt || { echo "Failed to retrieve backend canister ID"; exit 1; }
+
+      - name: Upload Backend Canister ID as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Backend_Canister_ID
+          path: SentientHub/sentient-economic-backend/backend_canister_id.txt
+
+      - name: Build and Deploy UI Canisters
+        working-directory: SentientHub/sentient-economic-ui
+        run: |
+          dfx build || { echo "UI build failed"; exit 1; }
+          dfx deploy || { echo "UI deploy failed"; exit 1; }
+
+      - name: Get UI Canister ID
+        working-directory: SentientHub/sentient-economic-ui
+        run: |
+          dfx canister id sentient_economic_ui > ui_canister_id.txt || { echo "Failed to retrieve UI canister ID"; exit 1; }
+
+      - name: Upload UI Canister ID as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: UI_Canister_ID
+          path: SentientHub/sentient-economic-ui/ui_canister_id.txt
+
+      - name: Clean Up
+        run: |
+          rm -f SentientHub/sentient-economic-backend/backend_canister_id.txt
+          rm -f SentientHub/sentient-economic-ui/ui_canister_id.txt
