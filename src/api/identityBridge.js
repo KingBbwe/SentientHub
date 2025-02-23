@@ -10,7 +10,6 @@ export const identityBridge = Actor.createActor(IdentityBridgeIDL, {
   canisterId: IDENTITY_BRIDGE_CANISTER_ID,
 });
 
-// API functions
 export async function registerIdentity(identityData) {
   return await identityBridge.registerIdentity(identityData);
 }
