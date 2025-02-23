@@ -8,7 +8,6 @@ const IDENTITY_BRIDGE_CANISTER_ID = 'your-identity-bridge-canister-id';
 
 function Login() {
   const [loading, setLoading] = useState(true);
-  const [identity, setIdentity] = useState(null);
   const navigate = useNavigate();
   const agent = new HttpAgent();
   const identityBridge = Actor.createActor(IdentityBridgeIDL, {
@@ -16,32 +15,29 @@ function Login() {
     canisterId: IDENTITY_BRIDGE_CANISTER_ID,
   });
 
-  async function handleLogin() {
-    // Use the authentication API to retrieve user principal
-    const { principal } = await authenticateUser();
-    try {
-      const identityData = await identityBridge.getIdentity(principal);
-      if (identityData) {
-        setIdentity(identityData);
-        navigate('/dashboard');
-      } else {
-        alert("No identity found. Please create your identity in Identity Forge.");
-      }
-    } catch (error) {
-      console.error("Error retrieving identity:", error);
-      alert("Error retrieving identity.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
+    async function handleLogin() {
+      try {
+        const { principal } = await authenticateUser();
+        const identityData = await identityBridge.getIdentity(principal);
+        if (identityData) {
+          // Successful login; redirect to dashboard
+          navigate('/dashboard');
+        } else {
+          alert("No identity found. Please create your identity using Identity Forge.");
+          navigate('/create');
+        }
+      } catch (error) {
+        console.error("Error during login:", error);
+        alert("Login error. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
     handleLogin();
-  }, []);
+  }, [navigate, identityBridge]);
 
   if (loading) return <div>Loading identity...</div>;
-  if (!identity) return <div>No identity available. Please register your identity.</div>;
-
   return <div>Redirecting...</div>;
 }
 
