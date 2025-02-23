@@ -1,18 +1,17 @@
+import React, { useState } from 'react';
+import { Actor, HttpAgent } from '@dfinity/agent';
+import { idlFactory } from '../declarations/OtherCanisterIDs.did';
 
-import { useState } from "react";
-import { Actor, HttpAgent } from "@dfinity/agent";
-import { idlFactory } from "../../declarations/sentient_economic_interactions";
-
-const ProfileManagement = ({ identity }) => {
+function ProfileManagement({ identity }) {
   const [profile, setProfile] = useState(null);
+  const agent = new HttpAgent({ identity });
+  const actor = Actor.createActor(idlFactory, {
+    agent,
+    canisterId: 'your-profile-canister-id',
+  });
 
   const createProfile = async () => {
     try {
-      const agent = new HttpAgent({ identity });
-      const actor = Actor.createActor(idlFactory, {
-        agent,
-        canisterId: "YOUR_CANISTER_ID",
-      });
       const result = await actor.createCharacterProfile();
       setProfile(result);
     } catch (error) {
@@ -22,11 +21,11 @@ const ProfileManagement = ({ identity }) => {
 
   return (
     <div className="p-4 border rounded">
-      <h2 className="text-xl mb-4">Profile Management</h2>
+      <h2>Profile Management</h2>
       {profile ? (
         <div>
-          <p>Profile ID: {profile.id}</p>
-          <p>Attributes: {JSON.stringify(profile.attributes)}</p>
+          <p><strong>Profile ID:</strong> {profile.id}</p>
+          <p><strong>Attributes:</strong> {JSON.stringify(profile.attributes)}</p>
         </div>
       ) : (
         <button onClick={createProfile} className="bg-green-500 px-4 py-2 rounded">
@@ -35,6 +34,6 @@ const ProfileManagement = ({ identity }) => {
       )}
     </div>
   );
-};
+}
 
 export default ProfileManagement;
