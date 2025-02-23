@@ -40,6 +40,7 @@ function CharacterCreation() {
   }
 
   function rollPersonality() {
+    // Personality profile is expressed as a fraction of two numbers from 1 to 6.
     const r1 = Math.floor(Math.random() * 6) + 1;
     const r2 = Math.floor(Math.random() * 6) + 1;
     const validProfiles = {
@@ -89,7 +90,7 @@ function CharacterCreation() {
       return;
     }
     alert("Character created successfully!");
-    // In a full implementation, character data would be sent to the backend.
+    // In a full implementation, character data would be sent to the backend for storage.
   }
 
   return (
@@ -116,7 +117,7 @@ function CharacterCreation() {
         </select>
       </div>
       <div className="input-group">
-        <label>Journey Description (optional):</label>
+        <label>Optional Journey Description:</label>
         <input type="text" onChange={e => setCharacter({ ...character, journey: e.target.value })} />
       </div>
       <button onClick={rollAttributes}>Roll Attributes</button>
