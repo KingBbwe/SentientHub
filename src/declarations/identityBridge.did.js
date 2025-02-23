@@ -22,7 +22,7 @@ export const idlFactory = ({ IDL }) => {
   const Result = IDL.Variant({ ok: IDL.Text, err: IDL.Text });
   return IDL.Service({
     registerIdentity: IDL.Func([IdentityData], [Result], ['async']),
-    getIdentity: IDL.Func([IDL.Principal], [IDL.Opt(IdentityData)], ['query']),
+    getIdentity: IDL.Func([IDL.Text], [IDL.Opt(IdentityData)], ['query']),
     updateIdentity: IDL.Func([IdentityData], [Result], ['async']),
   });
 };
