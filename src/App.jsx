@@ -1,29 +1,20 @@
-import React, { useState } from 'react';
-import { createActorWithIdentity } from './index.js';
-import Header from './Header';
-import ProfileManagement from './ProfileManagement';
-import QuestManagement from './QuestManagement';
-import ResourceManagement from './ResourceManagement';
-import NarrativeMemory from './NarrativeMemory';
-import ProgressionTracking from './ProgressionTracking';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Login from './components/Login';
+import Dashboard from './components/Dashboard';
+import CharacterCreation from './components/CharacterCreation';
+import IdentityProfile from './components/IdentityProfile';
 
 function App() {
-  const [identity, setIdentity] = useState(null);
-  const [wallet, setWallet] = useState(null);
-
   return (
-    <div className="bg-gray-100 min-h-screen">
-      <Header setIdentity={setIdentity} setWallet={setWallet} />
-      <div className="container mx-auto p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ProfileManagement identity={identity} />
-          <QuestManagement identity={identity} />
-          <ResourceManagement identity={identity} />
-          <NarrativeMemory identity={identity} />
-          <ProgressionTracking identity={identity} />
-        </div>
-      </div>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/create" element={<CharacterCreation />} />
+        <Route path="/profile" element={<IdentityProfile />} />
+      </Routes>
+    </Router>
   );
 }
 
