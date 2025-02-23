@@ -1,0 +1,24 @@
+name: Deploy Canisters
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install DFINITY SDK
+        run: |
+          curl -o- https://sdk.dfinity.org/install.sh | bash
+          source ~/.cache/dfinity/bin/dfx
+      - name: Deploy Identity Bridge Canister
+        run: |
+          dfx deploy identity_bridge
+      - name: Deploy Crystal Bank Canister
+        run: |
+          dfx deploy crystal_bank
+
