@@ -43,10 +43,11 @@ private let validProfiles: [(Nat, Nat)] = [
     (4, 6), (4, 1), (5, 1), (5, 2), (6, 2), (6, 3)
 ];
 
+// Age bands follow RULES_CANON (ruled 2026-11-27): "18-36" covers ages 18-35, "36-50+" covers 36 and over. They match identify-eweself and Hex-Die.
 // Age Bands
 private let ageBands: [AgeBand] = [
-    { range = "18-35"; description = "A youthful period of exploration and growth." },
-    { range = "36-50"; description = "A maturing stage of reflection and mastery." }
+    { range = "18-36"; description = "A youthful period of exploration and growth." },
+    { range = "36-50+"; description = "A maturing stage of reflection and mastery." }
 ];
 
 // Core Traits Array
@@ -1799,9 +1800,9 @@ private func assignCharacterJourneyAndAgeBand(): (CharacterJourney, AgeBand) {
     let journeyId = await _rollDie(64); // Randomly select a journey (1-64)
     let journey = characterJourneys[journeyId - 1]; // Fetch the journey from the array
     let ageBand = if (journeyId <= 32) {
-        { range = "18-35"; description = "A youthful period of exploration and growth." }
+        { range = "18-36"; description = "A youthful period of exploration and growth." }
     } else {
-        { range = "36-50"; description = "A maturing stage of reflection and mastery." }
+        { range = "36-50+"; description = "A maturing stage of reflection and mastery." }
     };
     (journey, ageBand);
 };
@@ -1810,9 +1811,9 @@ private func determineAgeBand(): async AgeBand {
     // Roll a die to randomly assign an age band
     let roll = await _rollDie(2); // Roll a 2-sided die (1 or 2)
     if (roll == 1) {
-        { range = "18-35"; description = "A youthful period of exploration and growth." };
+        { range = "18-36"; description = "A youthful period of exploration and growth." };
     } else {
-        { range = "36-50"; description = "A maturing stage of reflection and mastery." };
+        { range = "36-50+"; description = "A maturing stage of reflection and mastery." };
     };
 };
 
@@ -1827,7 +1828,7 @@ private func assignCoreTraits(): (CoreTrait, CoreTrait) {
 
 private func generateCharacterJourney(ageBand: AgeBand): CharacterJourney {
     // Assign a journey based on the age band
-    if (ageBand.range == "18-35") {
+    if (ageBand.range == "18-36") {
         // Young: Moving Forward (1-32)
         let journeyId = await _rollDie(32); // Randomly select a journey from 1-32
         Option.get(Array.find(characterJourneys, func(x: (Nat, CharacterJourney)): Bool { x.0 == journeyId }), {
