@@ -15,6 +15,9 @@ import Data "../src/Data";
 import Sentient "../src/Sentient";
 import Progression "../src/Progression";
 import Bank "../src/Bank";
+import Vitals "../src/Vitals";
+import Effects "../src/Effects";
+import Actions "../src/Actions";
 import Random "mo:base/Random";
 import Blob "mo:base/Blob";
 import Array "mo:base/Array";
@@ -34,9 +37,9 @@ let problems = Character.validate(c);
 say("1. Character " # c.name # " validates: " # (if (problems.size() == 0) "yes" else "NO"));
 assert problems.size() == 0;
 
-// 2. Register a Sentient (starting Fate Points 3: the table convention; the Hub takes the number as an argument)
-var s = Sentient.newState(3);
-say("2. Registered. FP " # Nat.toText(s.fate.fp));
+// 2. Register a Sentient (starting Fate Points 3: the table convention; Will and the Tribe's Tongue come from the Character)
+var s = Sentient.newStateFor(3, c.attributes.Will, ?c.tribe.tongue);
+say("2. Registered. FP " # Nat.toText(s.fate.fp) # ", Resilience " # Nat.toText(s.vitals.resilience) # " (Will " # Nat.toText(c.attributes.Will) # "), TP " # Nat.toText(s.vitals.tp) # ", Tongue " # c.tribe.tongue);
 
 // 3. A quest carrying a DC: the Character's physical Personal DC, in its band's mode
 let baseDc = c.dc.physical.value;
@@ -87,6 +90,24 @@ let (s2, owed) = ok(Sentient.spendFate(s, 2), "spendFate");
 s := s2;
 say("8. Spent 2 FP -> Skulduggery +" # Nat.toText(owed) # " (now " # Nat.toText(s.moral.skulduggery) # ")");
 assert owed == 1;
+
+// 8b. Speak the Tribe's Tongue (costs TP), take a hit, then use two actions from the Action Economy: Yield Gracefully (Grace +2), Defensive Chant (Skulduggery down)
+let (v1, tpCost) = ok(Vitals.speak(s.vitals), "speak");
+s := { s with vitals = v1 };
+say("8b. Spoke " # c.tribe.tongue # ": TP -" # Nat.toText(tpCost) # " (now " # Nat.toText(s.vitals.tp) # ")");
+s := ok(Effects.inflict(s, #resilience, #lose, 7), "inflict");
+s := ok(Effects.inflict(s, #disquiet, #gain, 2), "disquiet");
+say("    Hit: Resilience " # Nat.toText(s.vitals.resilience) # "/" # Nat.toText(s.vitals.resilienceMax) # ", Disquiet " # Nat.toText(s.vitals.disquiet) # " (roll penalty -" # Nat.toText(Vitals.disquietPenalty(s.vitals)) # ")");
+func action(n : Text) : Actions.Action { for (a in Actions.actions.values()) { if (a.name == n) return a }; assert false; loop {} };
+let yg = ok(Effects.perform(s, action("Yield Gracefully").effects, #C, #none, Random.Finite(blobFor(11))), "Yield Gracefully");
+s := yg.state;
+let dc2 = ok(Effects.perform(s, action("Defensive Chant").effects, #C, #none, Random.Finite(blobFor(12))), "Defensive Chant");
+s := dc2.state;
+say("8c. Yield Gracefully: Grace " # Nat.toText(s.moral.grace) # "; Defensive Chant: Skulduggery now " # Nat.toText(s.moral.skulduggery));
+assert s.moral.grace >= 2 and s.vitals.tp < s.vitals.tpMax and s.vitals.resilience < s.vitals.resilienceMax;
+s := { s with vitals = Vitals.longRest(s.vitals) };
+say("8d. Long rest: Resilience " # Nat.toText(s.vitals.resilience) # ", Disquiet " # Nat.toText(s.vitals.disquiet) # ", TP " # Nat.toText(s.vitals.tp));
+assert s.vitals.resilience == s.vitals.resilienceMax and s.vitals.disquiet == 0;
 let spend : Bank.Spend = { type1 = s.balance.type1; type2 = s.balance.type2; type3 = s.balance.type3; type4 = s.balance.type4; inGameFuddy = s.balance.inGameFuddy };
 var acct = Bank.newAccount();
 let (s3, a1, claimed) = ok(Bank.convert(Bank.defaultConfig, s, acct, spend), "convert");

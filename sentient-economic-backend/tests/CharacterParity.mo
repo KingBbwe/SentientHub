@@ -739,6 +739,30 @@ let cases : [(Character.Character, [Text])] = [
    ["dc.spiritual must equal trajectory.b"]),
   ({ schema = "auld-ewe.character"; version = 1; id = "0123456789abcdef0123456789abcdef"; createdAt = "2026-11-27T10:00:00.000Z"; name = "Aralen"; gender = #ewe;
     nameHexagram = 17; renamesRemaining = 5;
+    soul = { pattern = "Seeker of Trials"; profile = (1, 3); profileId = "1/3"; profileName = "Investigating Catalyst" };
+    coreTraits = { conscious = { trait = "Fixed Rhythms"; hexagram = 5 }; unconscious = { trait = "Contemplation"; hexagram = 20 } };
+    trajectory = { id = 1; ageBand = "18-36"; a = { role = "from"; hexagram = 13; name = "The Listener (Hex 13)" }; b = { role = "to"; hexagram = 7; name = "The Leader (Hex 7)" } };
+    dc = { intellectual = { value = 5; band = "1-16"; mode = #over; source = "core trait: conscious" }; physical = { value = 20; band = "17-32"; mode = #under; source = "core trait: unconscious" }; emotional = { value = 13; band = "1-16"; mode = #over; source = "trajectory: from" }; spiritual = { value = 7; band = "1-16"; mode = #over; source = "trajectory: to" } };
+    lineage = { name = "Elder Ewelings"; type_ = "Pureblood"; role = "Historians & Diplomats"; traits = ["Natural leaders", "Ancient magic", "Tradition-bound"] };
+    tribe = { name = "Tribe of Lightbearers"; tongue = "Hope Tongue"; resonance = "Virtuous" };
+    attributes = { Inspiration = 3; Intellect = 4; Prowess = 4; SelfAwareness = 3; Instinct = 4; Drive = 3; Energy = 2; Emotion = 2; Will = 4 };
+    allocation = { rule = "32-point"; mode = #seeded; budget = 32; spent = 29; remaining = 3; complete = false; rerollPenalty = 0; floors = { Inspiration = 3; Intellect = 4; Prowess = 3; SelfAwareness = 3; Instinct = 2; Drive = 2; Energy = 2; Emotion = 2; Will = 3 } };
+    acquired = []; skills = [("Steadfastness", 0), ("Meditation", 0), ("Head Combat", 0)]; dieTier = 6; skulduggery = 0; grace = 0; creation = ?{ soulRoll = ?{ dice = (1, 1); rerolls = [2, 6, 3] }; traitRolls = ?{ conscious = ?(1, 5); unconscious = ?(3, 4) }; skillRoll = ?{ picks = ["Steadfastness", "Meditation", "Head Combat"] }; rollCount = 1; penalty = 0 } },
+   []),
+  ({ schema = "auld-ewe.character"; version = 1; id = "0123456789abcdef0123456789abcdef"; createdAt = "2026-11-27T10:00:00.000Z"; name = "Aralen"; gender = #ewe;
+    nameHexagram = 17; renamesRemaining = 5;
+    soul = { pattern = "Seeker of Trials"; profile = (1, 3); profileId = "1/3"; profileName = "Investigating Catalyst" };
+    coreTraits = { conscious = { trait = "Fixed Rhythms"; hexagram = 5 }; unconscious = { trait = "Contemplation"; hexagram = 20 } };
+    trajectory = { id = 1; ageBand = "18-36"; a = { role = "from"; hexagram = 13; name = "The Listener (Hex 13)" }; b = { role = "to"; hexagram = 7; name = "The Leader (Hex 7)" } };
+    dc = { intellectual = { value = 5; band = "1-16"; mode = #over; source = "core trait: conscious" }; physical = { value = 20; band = "17-32"; mode = #under; source = "core trait: unconscious" }; emotional = { value = 13; band = "1-16"; mode = #over; source = "trajectory: from" }; spiritual = { value = 7; band = "1-16"; mode = #over; source = "trajectory: to" } };
+    lineage = { name = "Elder Ewelings"; type_ = "Pureblood"; role = "Historians & Diplomats"; traits = ["Natural leaders", "Ancient magic", "Tradition-bound"] };
+    tribe = { name = "Tribe of Lightbearers"; tongue = "Hope Tongue"; resonance = "Virtuous" };
+    attributes = { Inspiration = 3; Intellect = 4; Prowess = 4; SelfAwareness = 3; Instinct = 4; Drive = 3; Energy = 2; Emotion = 2; Will = 4 };
+    allocation = { rule = "32-point"; mode = #seeded; budget = 32; spent = 29; remaining = 3; complete = false; rerollPenalty = 0; floors = { Inspiration = 3; Intellect = 4; Prowess = 3; SelfAwareness = 3; Instinct = 2; Drive = 2; Energy = 2; Emotion = 2; Will = 3 } };
+    acquired = []; skills = [("Steadfastness", 0), ("Meditation", 0), ("Hex Reading", 0)]; dieTier = 6; skulduggery = 0; grace = 0; creation = ?{ soulRoll = ?{ dice = (1, 1); rerolls = [2, 6, 3] }; traitRolls = ?{ conscious = ?(1, 5); unconscious = ?(3, 4) }; skillRoll = ?{ picks = ["Steadfastness", "Meditation", "Hex Reading"] }; rollCount = 1; penalty = 0 } },
+   ["unknown skill: Hex Reading"]),
+  ({ schema = "auld-ewe.character"; version = 1; id = "0123456789abcdef0123456789abcdef"; createdAt = "2026-11-27T10:00:00.000Z"; name = "Aralen"; gender = #ewe;
+    nameHexagram = 17; renamesRemaining = 5;
     soul = { pattern = "Seeker of Trials"; profile = (6, 6); profileId = "1/3"; profileName = "Investigating Catalyst" };
     coreTraits = { conscious = { trait = "Fixed Rhythms"; hexagram = 5 }; unconscious = { trait = "Contemplation"; hexagram = 21 } };
     trajectory = { id = 1; ageBand = "18-36"; a = { role = "from"; hexagram = 13; name = "The Listener (Hex 13)" }; b = { role = "to"; hexagram = 7; name = "The Leader (Hex 7)" } };
@@ -5549,4 +5573,4 @@ for (i in cases.keys()) {
   };
 };
 assert failures == 0;
-Debug.print("CharacterParity ok: " # debug_show cases.size() # " cases (25 valid, 436 invalid)");
+Debug.print("CharacterParity ok: " # debug_show cases.size() # " cases (26 valid, 437 invalid)");

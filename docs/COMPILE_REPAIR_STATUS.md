@@ -56,10 +56,18 @@ Run everything with `tools/mo-check/test-all.sh` (needs `npm i motoko` and `./fe
 5. Orders are an unbounded array and state is saved in `preupgrade`: fine for a playtest, not for production.
 6. The old `CrystalBank` repo code is not ported; this replaces it as the specification's working form.
 
-## Open items (as of Move 8)
+## Stage 6 (skills, Tongues, Action Economy) interpretations and placeholders
+1. Skills.mo regenerated: 134 skills (21 codex additions, 16 on Will). Tongues.mo (20) and Actions.mo (60) are generated from the JS data in identify-eweself and hex-die, so the three stay in step.
+2. New modules: Vitals (Resilience, Disquiet, Tongue Power), Effects (applies an action's effects for the tier that came up). Fate costs are paid first and atomically; a short Fate pool refuses the whole action, rewards included. Foe and ally effects are returned as Outgoing; controllers apply them with `gmApply`.
+3. Hub gained: `register(fatePoints, will, tongue)`, `performAction`, `speakTongue`, `useMasterAbility`, `longRest`, `myVitals`, `gmApply`. Disquiet is a penalty to the check modifier. Entropy is fetched, then resolved synchronously.
+4. PLACEHOLDERS: Resilience 20 + 4 x Will, Disquiet cap 10 and -1 per point, TP pool 6, long-rest reset, literal "when" readings, d4 to d6 and d10 to d12 mapping.
+5. Tests: VitalsTest, EffectsTest (all 60 actions x 3 tiers x 3 paths, mutation-checked); vertical slice extended (Tongue, hit, actions, rest). CharacterParity 463 cases.
+
+## Open items (as of Stage 6)
+- Rule on the Stage 6 placeholders above, and on the unruled phase-check, L1-L6 and Doshi items (RULES_CANON 6E).
 - Fate Point cap of 5 (RULES_CANON) is not enforced in code: rule or table convention? (Vertical slice shows FP 3 -> 8.)
 - FUDDY ledger facts unverified: run `icrc1_metadata` on `oeogn-qaaaa-aaaam-acoyq-cai` from the Ubuntu VM.
 - Canister not yet run under `dfx` (raw_rand, canister_status, upgrades, Candid round-trips).
 - Revoke the Telegram token at BotFather (production-phase priority 1).
 - Hex-Die default branch must be set to `Cyber-with-ROnRU-Revised` in GitHub Settings.
-- Review hexagram 60's narrative and the 76 assigned skill-attribute links.
+- Review hexagram 60's narrative and the 76 assigned skill-attribute links plus the 21 new codex skills.

@@ -1,5 +1,5 @@
-/// The canonical skills catalogue (generated from identify-eweself/skills.js; do not hand-edit: regenerate).
-/// 113 skills: the commander's list (111) plus Artistry and Command from the rules text, plus two Acquired Skillsets.
+/// The canonical skills catalogue (generated from identify-eweself/skills.js; do not hand-edit: regenerate with tools/mo-check/gen-skills.js).
+/// 134 skills: the commander's list (111), Artistry and Command from the rules text, and 21 codex additions (link "proposed"); plus Acquired Skillsets.
 module {
   public type Skill = { name : Text; domain : ?Text; group : ?Text; attribute : Text; source : Text; link : Text };
   public let DEFAULT : Int = -2;
@@ -118,7 +118,28 @@ module {
     { name = "Invention"; domain = ?"Technologies"; group = ?"Invention"; attribute = "Will"; source = "canon-list"; link = "canon" },
     { name = "Bartering"; domain = ?"Haggling"; group = ?"Bartering"; attribute = "Will"; source = "canon-list"; link = "canon" },
     { name = "Artistry"; domain = null; group = null; attribute = "Inspiration"; source = "rules-text"; link = "rules-text" },
-    { name = "Command"; domain = null; group = null; attribute = "Drive"; source = "rules-text"; link = "assigned" }
+    { name = "Command"; domain = null; group = null; attribute = "Drive"; source = "rules-text"; link = "assigned" },
+    { name = "Steadfastness"; domain = ?"Discipline"; group = ?"Resolve"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Composure"; domain = ?"Discipline"; group = ?"Resolve"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Mental Fortitude"; domain = ?"Discipline"; group = ?"Resolve"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Fudwave Defense"; domain = ?"Discipline"; group = ?"Resolve"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Ovine Restraint"; domain = ?"Discipline"; group = ?"Restraint"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Honorable Conduct"; domain = ?"Discipline"; group = ?"Restraint"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Oathkeeping"; domain = ?"Discipline"; group = ?"Restraint"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Meditation"; domain = ?"Discipline"; group = ?"Attunement"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Consciousness Calibration"; domain = ?"Discipline"; group = ?"Attunement"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Tongue Discipline"; domain = ?"Discipline"; group = ?"Attunement"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Counterspelling"; domain = ?"Magics"; group = ?"Defensive Magic"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Purification"; domain = ?"Magics"; group = ?"Defensive Magic"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Spell Discipline"; domain = ?"Magics"; group = ?"High Magic"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Stalwart Stance"; domain = ?"Combat Skills"; group = ?"Defensive Techniques"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Endurance"; domain = ?"Combat Skills"; group = ?"Defensive Techniques"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Aetherite Rites"; domain = ?"Etiquette"; group = ?"Vimana Etiquette"; attribute = "Will"; source = "codex"; link = "proposed" },
+    { name = "Hexagram Reading"; domain = ?"Technologies"; group = ?"Aetherix Interface"; attribute = "SelfAwareness"; source = "codex"; link = "proposed" },
+    { name = "Key Rotation"; domain = ?"Technologies"; group = ?"Aetherix Interface"; attribute = "Prowess"; source = "codex"; link = "proposed" },
+    { name = "Polarity Alteration"; domain = ?"Technologies"; group = ?"Aetherix Interface"; attribute = "Intellect"; source = "codex"; link = "proposed" },
+    { name = "Chain Weaving"; domain = ?"Magics"; group = ?"High Magic"; attribute = "Intellect"; source = "codex"; link = "proposed" },
+    { name = "Head Combat"; domain = ?"Combat Skills"; group = ?"Combat Phases"; attribute = "Instinct"; source = "codex"; link = "proposed" }
   ];
 
   /// Acquired Skillsets: earned in play, held at modifier 0.

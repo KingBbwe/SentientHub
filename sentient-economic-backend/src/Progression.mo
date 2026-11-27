@@ -38,6 +38,12 @@ module {
 
   public func addGrace(m : Moral, n : Nat) : Moral { { m with grace = m.grace + n; totalGrace = m.totalGrace + n } };
 
+  /// In-play Skulduggery removal (Defensive Chant, Purifying Light, Honorable Yield...): only the uncrystallised meter, never Taints.
+  public func removeSkulduggery(m : Moral, n : Nat) : Moral { { m with skulduggery = if (n >= m.skulduggery) 0 else m.skulduggery - n } };
+
+  /// Reduces the Grace meter (an effect inflicted on someone). The ladder counts totalGrace, so it never goes down.
+  public func reduceGrace(m : Moral, n : Nat) : Moral { { m with grace = if (n >= m.grace) 0 else m.grace - n } };
+
   /// Spends Grace to cleanse Skulduggery 1:1, limited by the Grace held and the uncrystallised Skulduggery. Returns (moral, amount cleansed).
   public func cleanse(m : Moral, amount : Nat) : (Moral, Nat) {
     let c = Nat.min(amount, Nat.min(m.skulduggery, m.grace));
