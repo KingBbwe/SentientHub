@@ -92,7 +92,7 @@ module {
     };
   };
 
-  func effectiveDie(die : Nat, stepDown : Bool) : Result.Result<(Nat, Nat), Text> {
+  public func effectiveDie(die : Nat, stepDown : Bool) : Result.Result<(Nat, Nat), Text> {
     if (not stepDown) return #ok(die, 0);
     switch (stepTable(die)) { case null #err("No step-down defined for d" # Nat.toText(die)); case (?s) #ok s };
   };

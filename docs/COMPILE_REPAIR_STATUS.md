@@ -26,7 +26,7 @@ Run everything with `tools/mo-check/test-all.sh` (needs `npm i motoko` and `./fe
 | 2 | `src/Skills.mo`, `src/Character.mo` | Done. `auld-ewe.character` v1 as a Candid record; `validate` returns the same error list as identify-eweself's JS validator on 461 generated cases (`tests/CharacterParity.mo`). |
 | 3 | `src/Rules.mo` | Done. Port of `hexdie.js` (Signed Agency, Ovine Pull, Bolt, step-down on the cast, join table, line reveal, disaster mitigation, damage DCs). `tests/RulesParity.mo`: 2,255 checks, 500 reveals, 500 mitigations, 800 DC adjustments, 216 line keeps all equal to the JS engine; three deliberate rule changes were each caught. |
 | 3 | `src/Hub.mo` | A small, compiling, read-only canister (validate a Character, resolve a check, serve narratives and quests); its Candid interface generates. |
-| 4 | Economy and progression | Not started: resources, villainy and venerable tracks, feats, medals, acquired skills, storage. Port one function per name from `main.mo`, deleting the duplicates. |
+| 4 | `src/Progression.mo`, `Economy.mo`, `Dice.mo`, `Sentient.mo`; `Hub.mo` now stateful | Done. One ladder from the canon constants (20 Skulduggery -> Taint, 5 Taints -> Vice, 4 Vices -> Villainy level; 25 Grace -> a Grace, 4 -> Virtue, 5 -> Venerable level; 5 Feats -> Medal, 5 Medals -> Acquired Skillset slot, 5 Skillsets -> Venerable status). Rewards by join cell, caps, 2 FP spent = 1 Skulduggery, Grace cleansing. On-chain dice (`raw_rand`, rejection sampling). Per-principal state with `register`, `submitCheck`, `spendFate`, `cleanse`, `claimSkillset`, `awardFeat` (controllers only). Tests: Progression, Economy, Dice, Sentient (all pass). The legacy `main.mo` is no longer needed. |
 | 5 | CrystalBank / FUDDY | Not started (Move 6). |
 
 `main.mo` is now legacy: it is kept only as the source for stage 4 and is not part of the build.
@@ -34,3 +34,12 @@ Run everything with `tools/mo-check/test-all.sh` (needs `npm i motoko` and `./fe
 ## Notes for the next stage
 - Randomness stays outside `Rules.mo` (explicit rolls). The canister will need an on-chain source (`raw_rand`) behind one function, replacing the `await _rollDie` calls.
 - The JSON-to-Candid mapping of a Character file is a front-end job (missing `acquired` becomes `[]`; `lineage.type` maps to `type_`).
+
+## Stage 4 interpretations (for ratification)
+1. The draft had three conflicting progression designs. The ladder above (your canon-compliant constants) is used; the checkpoint tables, the 10/20/40/60/80/100 villainy thresholds and the 1-20 sub-levels were dropped.
+2. Taints are permanent. Grace cleanses only the uncrystallised Skulduggery meter, 1 Grace per 1 Skulduggery (spent Grace never lowers the Virtue ladder, which counts total Grace earned).
+3. Levels cap at 7 (Abyssal / Divine). Venerable level scales rewards: percent = clamp(DC x (10 + level) / 10, 20, 100).
+4. Rewards by join cell: pass+Triumph = Triumph set + full quest prize; pass+Conflict = Conflict set + half the prize; any Disaster = Skulduggery 1 + Type-4 crystal; fail+Triumph/Conflict = nothing.
+5. Crystals and in-game FUDDY are balance-capped (100/80/50/20, 20). The Grace cap of 3 is per grant (as a balance cap it would make 25 Grace unreachable).
+6. Persistence is a snapshot taken in `preupgrade`; a trap during an unplanned upgrade would lose the interim state. Move to stable storage before holding real value.
+7. `awardFeat` is controller-only until Stage 5 decides who may award Feats.
