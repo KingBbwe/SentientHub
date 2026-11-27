@@ -15,3 +15,6 @@ build/
 # OS/editor cruft
 .DS_Store
 *.swp
+
+# Render docs-site build output
+site/dist/

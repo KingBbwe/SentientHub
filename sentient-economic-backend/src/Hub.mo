@@ -17,6 +17,10 @@ import Bank "Bank";
 import Int "mo:base/Int";
 import Time "mo:base/Time";
 import Nat "mo:base/Nat";
+import Vitals "Vitals";
+import Tongues "Tongues";
+import Actions "Actions";
+import Effects "Effects";
 
 actor Hub {
   type State = Sentient.State;
@@ -55,13 +59,16 @@ actor Hub {
     if (Principal.isAnonymous(p)) #err("Anonymous callers cannot hold a Sentient") else #ok p;
   };
 
-  /// Creates the caller's Sentient with its starting Fate Points (a Character's creation decides the number). One per principal.
-  public shared ({ caller }) func register(fatePoints : Nat) : async Result.Result<Sentient.Standing, Text> {
+  /// Creates the caller's Sentient: starting Fate Points, the Will attribute (1-5; sets Resilience) and the Tongue its Tribe speaks, if any.
+  /// One per principal.
+  public shared ({ caller }) func register(fatePoints : Nat, will : Nat, tongue : ?Text) : async Result.Result<Sentient.Standing, Text> {
     switch (caller_(caller)) {
       case (#err e) #err e;
       case (#ok p) {
         if (sentients.get(p) != null) return #err("This principal already has a Sentient");
-        let s = Sentient.newState(fatePoints);
+        if (will < 1 or will > 5) return #err("Will must be 1 to 5");
+        switch (tongue) { case null {}; case (?t) { if (Tongues.find(t) == null) return #err("Unknown Tongue: " # t) } };
+        let s = Sentient.newStateFor(fatePoints, will, tongue);
         sentients.put(p, s);
         #ok(Sentient.standing(s));
       };
@@ -73,25 +80,112 @@ actor Hub {
     switch (sentients.get(caller)) { case null null; case (?s) ?Sentient.standing(s) };
   };
 
-  public type CheckOutcome = { result : Rules.CheckResult; rewards : [Types.ResourceReward]; standing : Sentient.Standing };
+  public type CheckOutcome = { result : Rules.CheckResult; rewards : [Types.ResourceReward]; standing : Sentient.Standing; disquietPenalty : Nat };
+
+  /// Fetches 32 bytes of on-chain entropy for one check (the only async step). Refuses unregistered and anonymous callers first.
+  func entropyFor(caller : Principal) : async Result.Result<Blob, Text> {
+    switch (caller_(caller)) { case (#err e) return #err e; case (#ok _) {} };
+    if (sentients.get(caller) == null) return #err("Register a Sentient first");
+    #ok(await ic.raw_rand());
+  };
+
+  /// One check, synchronously, from entropy already fetched: rolls cast, die and Pull and resolves against the caller's Personal DC.
+  /// Disquiet is a penalty to the modifier. The state is read here, AFTER the await, so there are no stale writes. Not written here.
+  /// The Finite is advanced past the check's own rolls so the caller can draw amount dice from the same entropy.
+  func resolveWith(f : Random.Finite, caller : Principal, die : Nat, mod : Int, dc : Nat, stepDown : Bool, resistPull : Bool) : Result.Result<(Rules.CheckResult, Dice.Rolls, Nat), Text> {
+    let penalty = switch (sentients.get(caller)) { case null return #err("Register a Sentient first"); case (?s) Vitals.disquietPenalty(s.vitals) };
+    let eff = switch (Rules.effectiveDie(die, stepDown)) { case (#err e) return #err e; case (#ok (d, _)) d };
+    let rolls = switch (Dice.rolls(f, eff)) { case null return #err("Entropy exhausted; try again"); case (?r) r };
+    let input : Rules.Input = { cast = rolls.cast; roll = rolls.roll; die; mod = mod - penalty; dc; modeDc = null; stepDown; pullRoll = rolls.pull; resistPull };
+    switch (Rules.resolveCheck(input)) { case (#err e) #err e; case (#ok r) #ok(r, rolls, penalty) };
+  };
 
   /// Rolls the cast, die and Pull on-chain, resolves the check against the caller's Personal DC and settles the rewards.
   public shared ({ caller }) func submitCheck(die : Nat, mod : Int, dc : Nat, stepDown : Bool, resistPull : Bool) : async Result.Result<CheckOutcome, Text> {
-    switch (caller_(caller)) { case (#err e) return #err e; case (#ok _) {} };
-    if (sentients.get(caller) == null) return #err("Register a Sentient first");
-    let eff = switch (Rules.effectiveDie(die, stepDown)) { case (#err e) return #err e; case (#ok (d, _)) d };
-    let entropy = await ic.raw_rand();                         // the state is read AFTER this await: no stale writes
-    let rolls = switch (Dice.rolls(Random.Finite(entropy), eff)) { case null return #err("Entropy exhausted; try again"); case (?r) r };
-    let input : Rules.Input = { cast = rolls.cast; roll = rolls.roll; die; mod; dc; modeDc = null; stepDown; pullRoll = rolls.pull; resistPull };
-    let result = switch (Rules.resolveCheck(input)) { case (#err e) return #err e; case (#ok r) r };
+    let blob = switch (await entropyFor(caller)) { case (#err e) return #err e; case (#ok b) b };
+    let (result, rolls, penalty) = switch (resolveWith(Random.Finite(blob), caller, die, mod, dc, stepDown, resistPull)) { case (#err e) return #err e; case (#ok x) x };
     switch (sentients.get(caller)) {
       case null #err("Sentient not found");
       case (?s) {
         let (next, rewards) = Sentient.settle(s, result, Data.questTemplates[rolls.cast - 1].rewards);
         sentients.put(caller, next);
-        #ok({ result; rewards; standing = Sentient.standing(next) });
+        #ok({ result; rewards; standing = Sentient.standing(next); disquietPenalty = penalty });
       };
     };
+  };
+
+  public type ActionOutcome = { check : CheckOutcome; action : Text; applied : [Effects.Applied]; outgoing : [Effects.Outgoing]; resilienceBroken : Bool };
+
+  /// A named action from the Action Economy: the check settles rewards as usual, then the action's resource effects for the tier that came up
+  /// are applied to the caller. Effects aimed at a foe or allies are returned for the table. `path` selects Ganga-only or Doshi-only effects.
+  public shared ({ caller }) func performAction(actionId : Nat, die : Nat, mod : Int, dc : Nat, stepDown : Bool, resistPull : Bool, path : Effects.Path) : async Result.Result<ActionOutcome, Text> {
+    let action = switch (Actions.find(actionId)) { case null return #err("No such action"); case (?a) a };
+    let blob = switch (await entropyFor(caller)) { case (#err e) return #err e; case (#ok b) b };
+    let f = Random.Finite(blob);
+    let (result, rolls, penalty) = switch (resolveWith(f, caller, die, mod, dc, stepDown, resistPull)) { case (#err e) return #err e; case (#ok x) x };
+    switch (sentients.get(caller)) {
+      case null #err("Sentient not found");
+      case (?s) {
+        switch (Effects.perform(s, action.effects, result.tier, path, f)) {
+          case (#err e) #err e;                                  // e.g. not enough Fate Points: the whole action, rewards included, is refused
+          case (#ok o) {
+            let (next, rewards) = Sentient.settle(o.state, result, Data.questTemplates[rolls.cast - 1].rewards);
+            sentients.put(caller, next);
+            #ok({ check = { result; rewards; standing = Sentient.standing(next); disquietPenalty = penalty }; action = action.name; applied = o.applied; outgoing = o.outgoing; resilienceBroken = o.resilienceBroken });
+          };
+        };
+      };
+    };
+  };
+
+  /// Speaks the caller's Tongue: a check, the Tongue's TP cost, and burnout on a Disaster.
+  public shared ({ caller }) func speakTongue(die : Nat, mod : Int, dc : Nat, stepDown : Bool, resistPull : Bool) : async Result.Result<CheckOutcome, Text> {
+    switch (sentients.get(caller)) {
+      case null return #err("Register a Sentient first");
+      case (?s) { switch (Vitals.speak(s.vitals)) { case (#err e) return #err e; case (#ok _) {} } };         // fail fast, before the dice
+    };
+    let blob = switch (await entropyFor(caller)) { case (#err e) return #err e; case (#ok b) b };
+    let (result, rolls, penalty) = switch (resolveWith(Random.Finite(blob), caller, die, mod, dc, stepDown, resistPull)) { case (#err e) return #err e; case (#ok x) x };
+    switch (sentients.get(caller)) {
+      case null #err("Sentient not found");
+      case (?s) {
+        switch (Vitals.speak(s.vitals)) {
+          case (#err e) #err e;                                  // TP changed while the dice were in flight
+          case (#ok (v, _)) {
+            let (next, rewards) = Sentient.settle({ s with vitals = Vitals.afterSpeaking(v, result.tier) }, result, Data.questTemplates[rolls.cast - 1].rewards);
+            sentients.put(caller, next);
+            #ok({ result; rewards; standing = Sentient.standing(next); disquietPenalty = penalty });
+          };
+        };
+      };
+    };
+  };
+
+  public type Vitality = { vitals : Vitals.Vitals; disquietPenalty : Nat };
+  public shared query ({ caller }) func myVitals() : async ?Vitality {
+    switch (sentients.get(caller)) { case null null; case (?s) ?{ vitals = s.vitals; disquietPenalty = Vitals.disquietPenalty(s.vitals) } };
+  };
+
+  /// Once-per-rest master ability of the caller's Tongue.
+  public shared ({ caller }) func useMasterAbility() : async Result.Result<Tongues.Master, Text> {
+    switch (sentients.get(caller)) {
+      case null #err("Register a Sentient first");
+      case (?s) { switch (Vitals.useMaster(s.vitals)) { case (#err e) #err e; case (#ok (v, m)) { sentients.put(caller, { s with vitals = v }); #ok m } } };
+    };
+  };
+
+  /// A long rest: Resilience, Disquiet, Tongue Power, burnout and the master ability reset.
+  public shared ({ caller }) func longRest() : async Result.Result<Vitals.Vitals, Text> {
+    switch (sentients.get(caller)) {
+      case null #err("Register a Sentient first");
+      case (?s) { let v = Vitals.longRest(s.vitals); sentients.put(caller, { s with vitals = v }); #ok v };
+    };
+  };
+
+  /// Controllers only: applies an effect inflicted on a player (a foe's action's Outgoing, or a GM ruling).
+  public shared ({ caller }) func gmApply(target : Principal, resource : Actions.Resource, dir : Actions.Dir, amount : Nat) : async Result.Result<Sentient.Standing, Text> {
+    if (not (await isController(caller))) return #err("Only the canister controllers may apply effects to a Sentient");
+    update_(target, func(s) { Effects.inflict(s, resource, dir, amount) });
   };
 
   func update_(p : Principal, f : State -> Result.Result<State, Text>) : Result.Result<Sentient.Standing, Text> {

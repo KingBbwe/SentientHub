@@ -11,6 +11,7 @@ import Rules "Rules";
 import Progression "Progression";
 import Economy "Economy";
 import Skills "Skills";
+import Vitals "Vitals";
 
 module {
   public type State = {
@@ -20,10 +21,14 @@ module {
     feats : Nat;                  // Legendary Feats awarded
     held : [Text];                // Acquired Skillsets held
     checks : Nat;
+    vitals : Vitals.Vitals;       // Resilience, Disquiet, Tongue Power
   };
 
-  public func newState(fatePoints : Nat) : State {
-    { moral = Progression.newMoral(); balance = Economy.newBalance(); fate = Rules.newFate(fatePoints); feats = 0; held = []; checks = 0 };
+  public func newState(fatePoints : Nat) : State { newStateFor(fatePoints, Vitals.DEFAULT_WILL, null) };
+
+  /// A new Sentient: Fate Points, the Will attribute (sets Resilience), and the Tongue its Tribe speaks, if any.
+  public func newStateFor(fatePoints : Nat, will : Nat, tongue : ?Text) : State {
+    { moral = Progression.newMoral(); balance = Economy.newBalance(); fate = Rules.newFate(fatePoints); feats = 0; held = []; checks = 0; vitals = Vitals.newVitals(will, tongue) };
   };
 
   func applyReward(s : State, r : Types.ResourceReward) : State {
